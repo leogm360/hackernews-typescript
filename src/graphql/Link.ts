@@ -1,12 +1,4 @@
-import {
-  extendType,
-  idArg,
-  nonNull,
-  nullable,
-  objectType,
-  stringArg,
-} from "nexus";
-import { NexusGenObjects } from "../../nexus-typegen";
+import { extendType, idArg, nonNull, objectType, stringArg } from "nexus";
 
 export const Link = objectType({
   name: "Link",
@@ -17,26 +9,13 @@ export const Link = objectType({
   },
 });
 
-let links: NexusGenObjects["Link"][] = [
-  {
-    id: 1,
-    url: "www.howtographql.com",
-    description: "Fullstack tutorial for GraphQL",
-  },
-  {
-    id: 2,
-    url: "graphql.org",
-    description: "GraphQL official website",
-  },
-];
-
 export const LinkQuery = extendType({
   type: "Query",
   definition(t) {
     t.nonNull.list.nonNull.field("feed", {
       type: "Link",
       resolve(parent, args, context, info) {
-        return links;
+        return context.prisma.link.findMany();
       },
     });
     t.nullable.field("link", {
@@ -47,11 +26,9 @@ export const LinkQuery = extendType({
       resolve(parent, args, context) {
         const { id } = args;
 
-        const link = links.find((link) => link.id == Number(id));
-
-        if (!link) {
-          throw new Error(`Link with id ${id} was not found.`);
-        }
+        const link = context.prisma.link.findFirst({
+          where: { id: Number(id) },
+        });
 
         return link;
       },
@@ -69,50 +46,37 @@ export const LinkMutation = extendType({
         url: nonNull(stringArg()),
       },
       resolve(parent, args, context) {
-        const { description, url } = args;
+        const newLink = context.prisma.link.create({
+          data: {
+            description: args.description,
+            url: args.url,
+          },
+        });
 
-        let idCount = links.length + 1;
-
-        const link = {
-          id: idCount,
-          description: description,
-          url: url,
-        };
-
-        links.push(link);
-
-        return link;
+        return newLink;
       },
     });
     t.nonNull.field("updateLink", {
       type: "Link",
       args: {
         id: nonNull(idArg()),
-        description: nullable(stringArg()),
-        url: nullable(stringArg()),
+        description: stringArg(),
+        url: stringArg(),
       },
-      resolve(parent, args, context) {
-        const { id, description, url } = args;
-
-        let linkIndex = 0;
-
-        const linkToUpdate = links.find((link, index) => {
-          linkIndex = index;
-
-          return link.id === Number(id);
+      resolve: async function (parent, args, context) {
+        const link = await context.prisma.link.findFirst({
+          where: { id: Number(args.id) },
         });
 
-        if (!linkToUpdate) {
-          throw new Error(`Link with id ${id} was not found.`);
-        }
+        const description = args.description
+          ? args.description
+          : link?.description;
+        const url = args.url ? args.url : link?.url;
 
-        const updatedLink = {
-          ...linkToUpdate,
-          description: description ? description : linkToUpdate.description,
-          url: url ? url : linkToUpdate.url,
-        };
-
-        links[linkIndex] = updatedLink;
+        const updatedLink = await context.prisma.link.update({
+          where: { id: link?.id },
+          data: { description, url },
+        });
 
         return updatedLink;
       },
@@ -122,22 +86,10 @@ export const LinkMutation = extendType({
       args: {
         id: nonNull(idArg()),
       },
-      resolve(parent, args, context) {
-        const { id } = args;
-
-        let linkIndex = 0;
-
-        const linkToDelete = links.find((link, index) => {
-          linkIndex = index;
-
-          return link.id === Number(id);
+      resolve: async function (parent, args, context) {
+        const deletedLink = await context.prisma.link.delete({
+          where: { id: Number(args.id) },
         });
-
-        if (!linkToDelete) {
-          throw new Error(`Link with id ${id} was not found.`);
-        }
-
-        const deletedLink = links.splice(linkIndex, 1)[0];
 
         return deletedLink;
       },
