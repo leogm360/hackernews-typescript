@@ -161,6 +161,7 @@ dist
 .ionide
 
 # Support for Project snippet scope
+.vscode
 .vscode/*.code-snippets
 
 # Ignore code-workspaces
