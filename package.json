@@ -4,7 +4,7 @@
   "description": "Hackernews blog backend created as per 'HOW TO GRAPHQL' typescript-apollo tutorial.",
   "main": "src/index.ts",
   "scripts": {
-    "build": "prisma generate && npm run generate && tsc",
+    "build": "prisma generate && npm run schema:generate && tsc",
     "start": "node dist/src/index.js",
     "dev": "ts-node-dev --transpile-only --no-notify --exit-child .",
     "tsc:init": "tsc --init",
