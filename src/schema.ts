@@ -3,16 +3,16 @@ import { join } from "path";
 import { cwd } from "process";
 import * as types from "./graphql";
 
-const WORKDIR = cwd();
+const WORK_DIR = cwd();
 
 const schema = makeSchema({
   types,
   outputs: {
-    schema: join(WORKDIR, "schema.graphql"),
-    typegen: join(WORKDIR, "nexus-typegen.ts"),
+    schema: join(WORK_DIR, "schema.graphql"),
+    typegen: join(WORK_DIR, "nexus-typegen.ts"),
   },
   contextType: {
-    module: join(WORKDIR, "./src/context.ts"),
+    module: join(WORK_DIR, "./src/context.ts"),
     export: "Context",
   },
 });
